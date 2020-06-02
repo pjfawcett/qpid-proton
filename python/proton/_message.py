@@ -90,13 +90,16 @@ class Message(object):
 
     def _check_property_keys(self):
         for k in self.properties.keys():
-            if isinstance(k, unicode):
-                # py2 unicode, py3 str (via hack definition)
+            # Check for string type. (py2: unicode, py3: str via type hack above)
+            # String subclasses symbol and char are excluded
+            # (But so are other string subclasses that would be encoded as type string!)
+            if type(k) == unicode:
                 continue
             # If key is binary then change to string
-            elif isinstance(k, str):
-                # py2 str
-                self.properties[k.encode('utf-8')] = self.properties.pop(k)
+            # Mostly for py2 users who encode strings without using the u'' prefix
+            # but py3 bytes() type will be converted also
+            elif isinstance(k, bytes):
+                self.properties[k.decode('utf-8')] = self.properties.pop(k)
             else:
                 raise MessageException('Application property key is not string type: key=%s %s' % (str(k), type(k)))
 
