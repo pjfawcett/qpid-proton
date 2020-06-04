@@ -34,7 +34,7 @@ from cproton import PN_DEFAULT_PRIORITY, PN_OVERFLOW, pn_error_text, pn_message,
 
 from . import _compat
 from ._common import isinteger, millis2secs, secs2millis, unicode2utf8, utf82unicode
-from ._data import Data, symbol, ulong, AnnotationDict
+from ._data import char, Data, symbol, ulong, AnnotationDict
 from ._endpoints import Link
 from ._exceptions import EXCEPTIONS, MessageException
 
@@ -90,10 +90,12 @@ class Message(object):
 
     def _check_property_keys(self):
         for k in self.properties.keys():
-            # Check for string type. (py2: unicode, py3: str via type hack above)
-            # String subclasses symbol and char are excluded
-            # (But so are other string subclasses that would be encoded as type string!)
-            if type(k) == unicode:
+            # Check for string types. (py2: unicode, py3: str via type hack above)
+            # or string subclasses
+            if isinstance(k, unicode):
+                # Convert string subclasses (including proton char and symbol types) to string
+                if not type(k) == unicode:
+                    self.properties[unicode(k)] = self.properties.pop(k)
                 continue
             # If key is binary then change to string
             # Mostly for py2 users who encode strings without using the u'' prefix
