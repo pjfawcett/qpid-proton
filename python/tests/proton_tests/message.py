@@ -107,6 +107,11 @@ class AccessorsTest(Test):
   def testReplyToGroupId(self):
     self._test_str("reply_to_group_id")
 
+try:
+    unicode()
+except NameError:
+    unicode = str
+
 class CodecTest(Test):
 
   def testProperties(self):
@@ -118,6 +123,43 @@ class CodecTest(Test):
     msg2.decode(data)
 
     assert msg2.properties['key'] == 'value', msg2.properties['key']
+
+  class MyStringSubclass(unicode):
+    def __repr__(self):
+      return 'MyStringSubclass(%s)' % unicode.__repr__(self)
+
+  def testStringSubclassPropertyKey(self):
+    self.msg.properties = {CodecTest.MyStringSubclass('abc'): 123}
+    data = self.msg.encode()
+
+    msg2 = Message()
+    msg2.decode(data)
+
+    assert msg2.properties == self.msg.properties
+
+  def testNonStringPropertyKey(self):
+    self.msg.properties = {123: 'abc'}
+    try:
+       self.msg.encode()
+    except MessageException:
+      return
+    assert True, '%s: non-string key' % self.msg
+
+  def testSymbolPropertyKey(self):
+    self.msg.properties = {symbol('abc'): 'def'}
+    try:
+       self.msg.encode()
+    except MessageException:
+      return
+    assert True, '%s: symbol key' % self.msg
+
+  def testCharPropertyKey(self):
+    self.msg.properties = {char('a'): 'bcd'}
+    try:
+       self.msg.encode()
+    except MessageException:
+      return
+    assert True, '%s: char key' % self.msg
 
   def testAnnotationsSymbolicAndUlongKey(self, a={symbol('one'): 1, 'two': 2, ulong(3): 'three'}):
     self.msg.annotations = a
