@@ -91,10 +91,10 @@ class Message(object):
     def _check_property_keys(self):
         for k in self.properties.keys():
             # Check for string types. (py2: unicode, py3: str via type hack above)
-            # or string subclasses
-            if isinstance(k, unicode):
-                # Convert string subclasses (including proton char and symbol types) to string
-                if not type(k) == unicode:
+            # or string subclasses. Exclude string subclasses symbol and char.
+            if isinstance(k, unicode) and not (type(k) is symbol or type(k) is char):
+                # Convert string subclasses to string
+                if not type(k) is unicode:
                     self.properties[unicode(k)] = self.properties.pop(k)
                 continue
             # If key is binary then change to string
