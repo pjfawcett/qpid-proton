@@ -140,6 +140,8 @@ class CodecTest(Test):
     msg2.decode(data)
 
     assert msg2.properties == self.msg.properties
+    for k in msg2.properties:
+        assert type(k) is unicode, 'non-string key %s %s' % (k, type(k))
 
   def testBinaryPropertyKey(self):
     self.msg.properties = {'abc': 123, b'def': 456}
@@ -149,6 +151,8 @@ class CodecTest(Test):
     msg2.decode(data)
 
     assert msg2.properties == self.msg.properties
+    for k in msg2.properties:
+        assert type(k) is unicode, 'non-string key %s %s' % (k, type(k))
 
   def _testNonStringPropertyKey(self, k):
     self.msg.properties = {k: 'abc'}

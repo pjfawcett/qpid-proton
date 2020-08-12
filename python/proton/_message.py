@@ -89,21 +89,27 @@ class Message(object):
             return err
 
     def _check_property_keys(self):
+        # In Py3, we cannot make changes to the dict while iterating, so we
+        # must save and make the changes afterwards
+        changed_keys = []
         for k in self.properties.keys():
             # Check for string types. (py2: unicode, py3: str via type hack above)
             # or string subclasses. Exclude string subclasses symbol and char.
             if isinstance(k, unicode) and not (type(k) is symbol or type(k) is char):
                 # Convert string subclasses to string
                 if not type(k) is unicode:
-                    self.properties[unicode(k)] = self.properties.pop(k)
+                    changed_keys.append((k, unicode(k)))
                 continue
             # If key is binary then change to string. Exclude bytes subclass decimal128.
             # Mostly for py2 users who encode strings without using the u'' prefix
             # but py3 bytes() type will be converted also
             elif isinstance(k, bytes) and not (type(k) is decimal128):
-                self.properties[k.decode('utf-8')] = self.properties.pop(k)
+                changed_keys.append((k, k.decode('utf-8')))
             else:
                 raise MessageException('Application property key is not string type: key=%s %s' % (str(k), type(k)))
+        # Make the key changes
+        for old_key, new_key in changed_keys:
+            self.properties[new_key] = self.properties.pop(old_key)
 
     def _pre_encode(self):
         inst = Data(pn_message_instructions(self._msg))
