@@ -20,6 +20,8 @@
 from __future__ import absolute_import
 
 from uuid import uuid4
+from sys import version_info
+from unittest import skipIf
 
 from proton import *
 
@@ -143,6 +145,7 @@ class CodecTest(Test):
     for k in msg2.properties:
         assert type(k) is unicode, 'non-string key %s %s' % (k, type(k))
 
+  @skipIf(version_info[0] != 2, 'Property key binary to string conversion only supported for Py2')
   def testBinaryPropertyKey(self):
     self.msg.properties = {'abc': 123, b'def': 456}
     data = self.msg.encode()
@@ -180,6 +183,8 @@ class CodecTest(Test):
     self._testNonStringPropertyKey(decimal64(12))
     self._testNonStringPropertyKey(timestamp(1234567890))
     self._testNonStringPropertyKey(uuid4())
+    if version_info[0] == 3: # Py3 only
+        self._testNonStringPropertyKey(b'abc123')
 
   def testCharPropertyKey(self):
     self._testNonStringPropertyKey(char('A'))

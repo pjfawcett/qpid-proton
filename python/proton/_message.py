@@ -38,6 +38,8 @@ from ._data import char, Data, decimal128, symbol, ulong, AnnotationDict
 from ._endpoints import Link
 from ._exceptions import EXCEPTIONS, MessageException
 
+from sys import version_info
+
 #
 # Hack to provide Python2 <---> Python3 compatibility
 try:
@@ -89,21 +91,30 @@ class Message(object):
             return err
 
     def _check_property_keys(self):
-        # In Py3, we cannot make changes to the dict while iterating, so we
+        '''
+        AMQP allows only string keys for properties. This function checks that this requirement is met
+        and raises a MessageException if not. However, in certain cases, conversions to string are
+        automatically performed:
+
+        1. When a key is a user-defined (non-AMQP) subclass of unicode/str (py2/py3).
+           AMQP types symbol and char, although derived from unicode/str, are not converted,
+           and result in an exception.
+
+        2. In Py2, when a key is binary. This is a convenience for Py2 users that encode
+           string literals without using the u'' prefix. In Py3, this is not the case, and
+           using a binary key will result in an error. AMQP type decimal128, which is derived
+           from binary, will not be converted, and will result in an exception.
+        '''
+        # We cannot make changes to the dict while iterating, so we
         # must save and make the changes afterwards
         changed_keys = []
         for k in self.properties.keys():
-            # Check for string types. (py2: unicode, py3: str via type hack above)
-            # or string subclasses. Exclude string subclasses symbol and char.
-            if isinstance(k, unicode) and not (type(k) is symbol or type(k) is char):
-                # Convert string subclasses to string
-                if not type(k) is unicode:
+            # If key is a subclass of unicode, convert to unicode. Exclude unicode subclasses symbol and char.
+            if isinstance(k, unicode)and not (type(k) is symbol or type(k) is char):
+                if type(k) is not unicode:
                     changed_keys.append((k, unicode(k)))
-                continue
-            # If key is binary then change to string. Exclude bytes subclass decimal128.
-            # Mostly for py2 users who encode strings without using the u'' prefix
-            # but py3 bytes() type will be converted also
-            elif isinstance(k, bytes) and not (type(k) is decimal128):
+            # Py2 only: If key is binary then convert to unicode. Exclude bytes subclass decimal128.
+            elif version_info[0] == 2 and isinstance(k, bytes) and not (type(k) is decimal128):
                 changed_keys.append((k, k.decode('utf-8')))
             else:
                 raise MessageException('Application property key is not string type: key=%s %s' % (str(k), type(k)))
