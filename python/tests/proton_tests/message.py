@@ -108,6 +108,10 @@ class AccessorsTest(Test):
     self._test_str("reply_to_group_id")
 
 try:
+    long()
+except NameError:
+    long = int
+try:
     unicode()
 except NameError:
     unicode = str
@@ -129,7 +133,7 @@ class CodecTest(Test):
       return 'MyStringSubclass(%s)' % unicode.__repr__(self)
 
   def testStringSubclassPropertyKey(self):
-    self.msg.properties = {CodecTest.MyStringSubclass('abc'): 123}
+    self.msg.properties = {'abc': 123, CodecTest.MyStringSubclass('def'): 456}
     data = self.msg.encode()
 
     msg2 = Message()
@@ -137,29 +141,50 @@ class CodecTest(Test):
 
     assert msg2.properties == self.msg.properties
 
-  def testNonStringPropertyKey(self):
-    self.msg.properties = {123: 'abc'}
-    try:
-       self.msg.encode()
-    except MessageException:
-      return
-    assert True, '%s: non-string key' % self.msg
+  def testBinaryPropertyKey(self):
+    self.msg.properties = {'abc': 123, b'def': 456}
+    data = self.msg.encode()
 
-  def testSymbolPropertyKey(self):
-    self.msg.properties = {symbol('abc'): 'def'}
+    msg2 = Message()
+    msg2.decode(data)
+
+    assert msg2.properties == self.msg.properties
+
+  def _testNonStringPropertyKey(self, k):
+    self.msg.properties = {k: 'abc'}
     try:
-       self.msg.encode()
+        self.msg.encode()
     except MessageException:
-      return
-    assert True, '%s: symbol key' % self.msg
+        return
+    self.fail('Non-string property key: %s, key type: %s' % (self.msg, type(k)))
+
+  def testNonSequencePropertyKeys(self):
+    # AMQP non-string types
+    self._testNonStringPropertyKey(None)
+    self._testNonStringPropertyKey(True)
+    self._testNonStringPropertyKey(byte(1))
+    self._testNonStringPropertyKey(ubyte(2))
+    self._testNonStringPropertyKey(short(3))
+    self._testNonStringPropertyKey(ushort(4))
+    self._testNonStringPropertyKey(int32(5))
+    self._testNonStringPropertyKey(uint(6))
+    self._testNonStringPropertyKey(long(7))
+    self._testNonStringPropertyKey(ulong(8))
+    self._testNonStringPropertyKey(float32(9.0))
+    self._testNonStringPropertyKey(10.0)
+    self._testNonStringPropertyKey(decimal32(11))
+    self._testNonStringPropertyKey(decimal64(12))
+    self._testNonStringPropertyKey(timestamp(1234567890))
+    self._testNonStringPropertyKey(uuid4())
 
   def testCharPropertyKey(self):
-    self.msg.properties = {char('a'): 'bcd'}
-    try:
-       self.msg.encode()
-    except MessageException:
-      return
-    assert True, '%s: char key' % self.msg
+    self._testNonStringPropertyKey(char('A'))
+
+  def testDecimal128PropertyKey(self):
+    self._testNonStringPropertyKey(decimal128(b'12345'))
+
+  def testSymbolPropertyKey(self):
+    self._testNonStringPropertyKey(symbol('abcdef'))
 
   def testAnnotationsSymbolicAndUlongKey(self, a={symbol('one'): 1, 'two': 2, ulong(3): 'three'}):
     self.msg.annotations = a

@@ -34,7 +34,7 @@ from cproton import PN_DEFAULT_PRIORITY, PN_OVERFLOW, pn_error_text, pn_message,
 
 from . import _compat
 from ._common import isinteger, millis2secs, secs2millis, unicode2utf8, utf82unicode
-from ._data import char, Data, symbol, ulong, AnnotationDict
+from ._data import char, Data, decimal128, symbol, ulong, AnnotationDict
 from ._endpoints import Link
 from ._exceptions import EXCEPTIONS, MessageException
 
@@ -97,10 +97,10 @@ class Message(object):
                 if not type(k) is unicode:
                     self.properties[unicode(k)] = self.properties.pop(k)
                 continue
-            # If key is binary then change to string
+            # If key is binary then change to string. Exclude bytes subclass decimal128.
             # Mostly for py2 users who encode strings without using the u'' prefix
             # but py3 bytes() type will be converted also
-            elif isinstance(k, bytes):
+            elif isinstance(k, bytes) and not (type(k) is decimal128):
                 self.properties[k.decode('utf-8')] = self.properties.pop(k)
             else:
                 raise MessageException('Application property key is not string type: key=%s %s' % (str(k), type(k)))
