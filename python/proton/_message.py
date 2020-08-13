@@ -110,7 +110,7 @@ class Message(object):
         changed_keys = []
         for k in self.properties.keys():
             # If key is a subclass of unicode, convert to unicode. Exclude unicode subclasses symbol and char.
-            if isinstance(k, unicode)and not (type(k) is symbol or type(k) is char):
+            if isinstance(k, unicode) and not (type(k) is symbol or type(k) is char):
                 if type(k) is not unicode:
                     changed_keys.append((k, unicode(k)))
             # Py2 only: If key is binary then convert to unicode. Exclude bytes subclass decimal128.
