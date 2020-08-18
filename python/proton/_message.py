@@ -38,8 +38,6 @@ from ._data import char, Data, decimal128, symbol, ulong, AnnotationDict
 from ._endpoints import Link
 from ._exceptions import EXCEPTIONS, MessageException
 
-from sys import version_info
-
 #
 # Hack to provide Python2 <---> Python3 compatibility
 try:
@@ -109,14 +107,19 @@ class Message(object):
         # must save and make the changes afterwards
         changed_keys = []
         for k in self.properties.keys():
-            # If key is a subclass of unicode, convert to unicode. Exclude unicode subclasses symbol and char.
-            if isinstance(k, unicode) and not (type(k) is symbol or type(k) is char):
+            if isinstance(k, unicode):
+                # Py2 & Py3 strings and their subclasses
+                if type(k) is symbol or type(k) is char:
+                    # Exclude symbol and char
+                    raise MessageException('Application property key is not string type: key=%s %s' % (str(k), type(k)))
                 if type(k) is not unicode:
+                    # Only for string subclasses, convert to string
                     changed_keys.append((k, unicode(k)))
-            # Py2 only: If key is binary then convert to unicode. Exclude bytes subclass decimal128.
-            elif version_info[0] == 2 and isinstance(k, bytes) and not (type(k) is decimal128):
+            elif isinstance(k, str) and not (type(k) is decimal128):
+                # Py2 only: If key is binary string then convert to unicode. Exclude bytes subclass decimal128.
                 changed_keys.append((k, k.decode('utf-8')))
             else:
+                # Anything else: raise exception
                 raise MessageException('Application property key is not string type: key=%s %s' % (str(k), type(k)))
         # Make the key changes
         for old_key, new_key in changed_keys:
@@ -449,7 +452,7 @@ class Message(object):
         The group-id for any replies.
 
         :type: ``str``
-        :raise: :exc:`MessageException` if there is any Proton error when using the setter.        
+        :raise: :exc:`MessageException` if there is any Proton error when using the setter.
         """)
 
     def _get_instructions(self):
