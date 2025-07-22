@@ -34,7 +34,7 @@ if (DOXYGEN_FOUND)
   # HTML files are generated to ./html - put those in the install.
   install (DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/html/"
            DESTINATION "${PROTON_SHARE}/docs/api-c"
-           COMPONENT documentation
+           COMPONENT c-devel
            OPTIONAL)
 
   set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES html)

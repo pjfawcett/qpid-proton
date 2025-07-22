@@ -20,6 +20,7 @@
 cmake_minimum_required (VERSION 3.16)
 
 project (Proton C)
+set (CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "" FORCE)
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/tools/cmake/Modules")
 set (CMAKE_THREAD_PREFER_PTHREAD TRUE)
@@ -63,7 +64,7 @@ set (PN_C_LIBRARY_DIR "${PROJECT_BINARY_DIR}/c")
 set (PN_C_SOURCE_DIR "${PROJECT_BINARY_DIR}/c/src")
 
 ## C
-set(CMAKE_C_STANDARD 99)
+# set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
@@ -322,6 +323,8 @@ set (MAN_INSTALL_DIR share/man CACHE PATH "Manpage directory")
 
 mark_as_advanced (INCLUDE_INSTALL_DIR LIB_INSTALL_DIR SYSCONF_INSTALL_DIR SHARE_INSTALL_DIR MAN_INSTALL_DIR)
 
+set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 # Sets variable NAME to contain relative path from ROOT to VALUE
 # if VALUE is already relative, it does nothing
 macro (pn_relative_install_dir NAME ROOT VALUE)
@@ -448,9 +451,20 @@ endforeach(BINDING)
 
 unset(BUILD_BINDINGS CACHE) # Remove from cache, only relevant when creating the initial cache.
 
-install (FILES LICENSE.txt README.md tests/share/CMakeLists.txt DESTINATION ${PROTON_SHARE})
-install (FILES tests/share/examples-README.md RENAME README.md DESTINATION ${PROTON_SHARE}/examples)
-install (DIRECTORY tests DESTINATION ${PROTON_SHARE} PATTERN share EXCLUDE)
+install (FILES LICENSE.txt NOTICE.txt
+         DESTINATION ${SHARE_INSTALL_DIR}/licenses/proton
+         COMPONENT c)
+install (FILES README.md tests/share/CMakeLists.txt
+         DESTINATION ${PROTON_SHARE}
+         COMPONENT c-devel)
+install (FILES tests/share/examples-README.md 
+         RENAME README.md
+         DESTINATION ${PROTON_SHARE}/examples
+         COMPONENT c-devel)
+install (DIRECTORY tests 
+         DESTINATION ${PROTON_SHARE}
+         COMPONENT c-devel
+         PATTERN share EXCLUDE)
 
 # Generate test environment settings
 configure_file(${PROJECT_SOURCE_DIR}/misc/config.sh.in
@@ -461,3 +475,20 @@ configure_file(${PROJECT_SOURCE_DIR}/misc/config.bat.in
 if (BUILD_EXAMPLES)
   add_subdirectory(tests/examples)
 endif (BUILD_EXAMPLES)
+
+set(CPACK_PACKAGE_VENDOR "Apache Software Foundation")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Apache Qpid Proton")
+set(CPACK_PACKAGE_VERSION_MAJOR "${PN_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${PN_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${PN_VERSION_POINT}")
+
+set(CPACK_GENERATOR "RPM")
+set(CPACK_PACKAGE_NAME "qpid-proton")
+set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+set(CPACK_PACKAGE_RELOCATABLE ON)
+set(CPACK_RPM_COMPONENT_INSTALL ON)
+set(CPACK_RPM_PACKAGE_RELEASE_DIST "e19")
+set(CPACK_RPM_FILE_NAME "RPM-DEFAULT")
+
+include (CPack)
+

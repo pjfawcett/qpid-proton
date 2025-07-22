@@ -567,17 +567,17 @@ endif ()
 # Install executables and libraries
 install(TARGETS qpid-proton qpid-proton-core
   EXPORT  ProtonTargets
-  RUNTIME DESTINATION bin
-  ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
-  LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-  INCLUDES DESTINATION ${INCLUDE_INSTALL_DIR})
+  RUNTIME DESTINATION bin COMPONENT c
+  ARCHIVE DESTINATION ${LIB_INSTALL_DIR} COMPONENT c-devel
+  LIBRARY DESTINATION ${LIB_INSTALL_DIR} COMPONENT c NAMELINK_COMPONENT c-devel
+  INCLUDES DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT c-devel)
 if (BUILD_STATIC_LIBS)
   install(TARGETS qpid-proton-static qpid-proton-core-static
     EXPORT  ProtonTargetsStatic
-    RUNTIME DESTINATION bin
-    ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
-    LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-    INCLUDES DESTINATION ${INCLUDE_INSTALL_DIR})
+    RUNTIME DESTINATION bin COMPONENT c
+    ARCHIVE DESTINATION ${LIB_INSTALL_DIR} COMPONENT c-devel
+    LIBRARY DESTINATION ${LIB_INSTALL_DIR} COMPONENT c-devel
+    INCLUDES DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT c-devel)
 endif()
 
 # Install windows pdb files
@@ -593,17 +593,17 @@ endif (MSVC)
 if (HAS_PROACTOR)
   install(TARGETS qpid-proton-proactor ${STATIC_LIBS}
     EXPORT  ProtonTargets
-    RUNTIME DESTINATION bin
-    ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
-    LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-    INCLUDES DESTINATION ${INCLUDE_INSTALL_DIR})
+    RUNTIME DESTINATION bin COMPONENT c
+    ARCHIVE DESTINATION ${LIB_INSTALL_DIR} COMPONENT c-devel
+    LIBRARY DESTINATION ${LIB_INSTALL_DIR} COMPONENT c NAMELINK_COMPONENT c-devel
+    INCLUDES DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT c-devel)
   if (BUILD_STATIC_LIBS)
     install(TARGETS qpid-proton-proactor-static
       EXPORT  ProtonTargetsStatic
-      RUNTIME DESTINATION bin
-      ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
-      LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-      INCLUDES DESTINATION ${INCLUDE_INSTALL_DIR})
+      RUNTIME DESTINATION bin COMPONENT c
+      ARCHIVE DESTINATION ${LIB_INSTALL_DIR} COMPONENT c-devel
+      LIBRARY DESTINATION ${LIB_INSTALL_DIR} COMPONENT c-devel
+      INCLUDES DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT c-devel)
   endif()
 
   # Install windows pdb files
@@ -618,17 +618,17 @@ endif ()
 if (HAS_TLS)
   install(TARGETS qpid-proton-tls ${STATIC_LIBS}
     EXPORT  ProtonTargets
-    RUNTIME DESTINATION bin
-    ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
-    LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-    INCLUDES DESTINATION ${INCLUDE_INSTALL_DIR})
+    RUNTIME DESTINATION bin COMPONENT c
+    ARCHIVE DESTINATION ${LIB_INSTALL_DIR} COMPONENT c-devel
+    LIBRARY DESTINATION ${LIB_INSTALL_DIR} COMPONENT c NAMELINK_COMPONENT c-devel
+    INCLUDES DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT c-devel)
   if (BUILD_STATIC_LIBS)
     install(TARGETS qpid-proton-tls-static
       EXPORT  ProtonTargetsStatic
-      RUNTIME DESTINATION bin
-      ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
-      LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-      INCLUDES DESTINATION ${INCLUDE_INSTALL_DIR})
+      RUNTIME DESTINATION bin COMPONENT c
+      ARCHIVE DESTINATION ${LIB_INSTALL_DIR} COMPONENT c-devel
+      LIBRARY DESTINATION ${LIB_INSTALL_DIR} COMPONENT c-devel
+      INCLUDES DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT c-devel)
   endif()
 
   # Install windows pdb files
@@ -642,7 +642,9 @@ endif ()
 
 # Install header files
 file(GLOB headers "${CMAKE_CURRENT_BINARY_DIR}/include/proton/*.[hi]")
-install (FILES ${headers} DESTINATION ${INCLUDE_INSTALL_DIR}/proton)
+install (FILES ${headers}
+         DESTINATION ${INCLUDE_INSTALL_DIR}/proton
+         COMPONENT c-devel)
 
 # Set ${VAR}/${VAR}DEBUG variables, configure and install the packageconf files for LIB
 macro(configure_lib VAR LIB)
@@ -658,7 +660,9 @@ macro(configure_lib VAR LIB)
   configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/lib${LIB}.pc.in
     ${CMAKE_CURRENT_BINARY_DIR}/lib${LIB}.pc @ONLY)
-  install (FILES ${CMAKE_CURRENT_BINARY_DIR}/lib${LIB}.pc DESTINATION ${LIB_INSTALL_DIR}/pkgconfig)
+  install (FILES ${CMAKE_CURRENT_BINARY_DIR}/lib${LIB}.pc
+           DESTINATION ${LIB_INSTALL_DIR}/pkgconfig
+           COMPONENT c-devel)
 endmacro()
 
 configure_lib(PROTONLIB qpid-proton)
@@ -673,16 +677,18 @@ endif(HAS_TLS)
 install(EXPORT ProtonTargets
   FILE ProtonTargets.cmake
   NAMESPACE Proton::
-  DESTINATION ${LIB_INSTALL_DIR}/cmake/Proton)
+  DESTINATION ${LIB_INSTALL_DIR}/cmake/Proton
+  COMPONENT c-devel)
 if (BUILD_STATIC_LIBS)
   install(EXPORT ProtonTargetsStatic
     FILE ProtonTargetsStatic.cmake
     NAMESPACE Proton::
-    DESTINATION ${LIB_INSTALL_DIR}/cmake/Proton)
+    DESTINATION ${LIB_INSTALL_DIR}/cmake/Proton
+    COMPONENT c-devel)
 endif()
 
 include(CMakePackageConfigHelpers)
-include(WriteBasicConfigVersionFile)
+# include(WriteBasicConfigVersionFile)
 
 configure_package_config_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ProtonConfig.cmake.in
@@ -696,10 +702,12 @@ write_basic_config_version_file(
 install (FILES
   ${CMAKE_CURRENT_BINARY_DIR}/ProtonConfig.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/ProtonConfigVersion.cmake
-  DESTINATION ${LIB_INSTALL_DIR}/cmake/Proton)
+  DESTINATION ${LIB_INSTALL_DIR}/cmake/Proton
+  COMPONENT c-devel)
 install (FILES
   ../tools/cmake/Modules/FindCyrusSASL.cmake
-  DESTINATION ${LIB_INSTALL_DIR}/cmake/Proton)
+  DESTINATION ${LIB_INSTALL_DIR}/cmake/Proton
+  COMPONENT c-devel)
 
 if (ENABLE_BENCHMARKS)
   add_subdirectory(benchmarks)
@@ -718,6 +726,7 @@ endif (BUILD_TOOLS)
 
 install (DIRECTORY examples/
          DESTINATION "${PROTON_SHARE}/examples/c"
+         COMPONENT c-devel
          USE_SOURCE_PERMISSIONS
          PATTERN "ProtonConfig.cmake" EXCLUDE
          PATTERN "testme" EXCLUDE)
